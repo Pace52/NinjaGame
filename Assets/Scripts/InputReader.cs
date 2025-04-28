@@ -9,17 +9,17 @@ public class InputReader
     {
         // Use GetAxisRaw for immediate response without smoothing
         float horizontal = Input.GetAxisRaw("Horizontal");
-        // float vertical = Input.GetAxisRaw("Vertical"); // Ignore vertical axis for standard movement
+        float vertical = Input.GetAxisRaw("Vertical"); // Ignore vertical axis for standard movement
 
         // Only use horizontal input for walking/running
         Vector2 input = new Vector2(horizontal, 0f);
 
         // Normalization might not be strictly necessary anymore with only one axis,
         // but doesn't hurt to keep if other inputs could be added later.
-        // if (input.sqrMagnitude > 1) // No need to normalize a 1D vector derived this way
-        // {
-        //     input.Normalize();
-        // }
+        if (input.sqrMagnitude > 1) // No need to normalize a 1D vector derived this way
+        {
+            input.Normalize();
+        }
         return input;
     }
 

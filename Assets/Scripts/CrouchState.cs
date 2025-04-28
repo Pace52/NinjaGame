@@ -4,7 +4,7 @@ public class CrouchState : PlayerBaseState
 {
     private float enterTime;
     private float crouchMoveSpeed;
-
+    private float CrouchSpeedMultiplier = 0.25f;
     public CrouchState(PlayerStateMachine stateMachine) : base(stateMachine)
     {
         // Calculate actual crouch speed based on multipliers
@@ -18,7 +18,7 @@ public class CrouchState : PlayerBaseState
         stateMachine.SetColliderCrouching();
         // Play crouch animation
         if (stateMachine.Animator != null)
-            stateMachine.Animator.Play("CrouchAnimation"); // Replace with actual animation name
+            stateMachine.Animator.Play("Crouch"); // Replace with actual animation name
         Debug.Log($"[CrouchState] Entering Crouch State at {enterTime:F2}s");
     }
 

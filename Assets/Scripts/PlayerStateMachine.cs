@@ -34,7 +34,7 @@ public class PlayerStateMachine : MonoBehaviour
     [SerializeField] private Vector2 standingColliderSize = new Vector2(1f, 2f); // Example
     [SerializeField] private Vector2 standingColliderOffset = new Vector2(0f, 0f); // Example
     [SerializeField] private Vector2 crouchingColliderSize = new Vector2(1f, 1f); // Example
-    [SerializeField] private Vector2 crouchingColliderOffset = new Vector2(0f, -0.5f); // Example
+    [SerializeField] private Vector2 crouchingColliderOffset = new Vector2(0f, -0.3f); // Example
     [SerializeField] private float standUpCheckDistance = 0.1f; // Distance above collider to check
     [SerializeField] private LayerMask groundLayer; // Assign layers considered ground/obstacles
 
