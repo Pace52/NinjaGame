@@ -11,13 +11,13 @@ public class LevelLoader : MonoBehaviour {
 
 	public string levelFileName;
 
-	//public Texture2D levelMap;
+	public Texture2D levelMap;
 
 	public ColorToPrefab[] colorToPrefab;
 
 
 	// Use this for initialization
-	void Start () {
+	void Awake () {
 		LoadMap();
 	}
 
@@ -74,7 +74,7 @@ public class LevelLoader : MonoBehaviour {
 			
 			if( c.Equals(ctp.color) ) {
 				// Spawn the prefab at the right location
-				GameObject go = (GameObject)Instantiate(ctp.prefab, new Vector3(x, y, 0), Quaternion.identity );
+				GameObject go = (GameObject)Instantiate(ctp.prefab, new Vector3(x, y, 0), Quaternion.identity);
 				go.transform.SetParent(this.transform);
 				// maybe do more stuff to the gameobject here?
 				return;
