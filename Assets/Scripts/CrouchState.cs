@@ -86,7 +86,7 @@ public class CrouchState : PlayerBaseState
         if (stateMachine.Animator != null && moveInput != Vector2.zero)
         {
             stateMachine.Animator.SetFloat("Horizontal", moveInput.x);
-            // stateMachine.Animator.SetFloat("Vertical", moveInput.y); // If needed
+            stateMachine.Animator.SetFloat("Vertical", moveInput.y); // If needed
         }
     }
 

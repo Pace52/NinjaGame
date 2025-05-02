@@ -3,15 +3,27 @@ using UnityEngine;
 public class CameraScript : MonoBehaviour
 {
     public GameObject player;
-    Vector3 offset;
+    private Vector3 offset;
 
-    // Update is called once per frame
-    void Update()
+    void Start()
     {
-        if (player = null)
+        if (player == null)
         {
             player = GameObject.FindGameObjectWithTag("Player");
         }
-        transform.position = player.transform.position - offset;
+
+        // Initialize the offset based on the initial positions of the player and camera
+        offset = transform.position - player.transform.position;
+    }
+
+    void Update()
+    {
+        if (player == null)
+        {
+            player = GameObject.FindGameObjectWithTag("Player");
+        }
+
+        // Move the camera to the player's position, maintaining the offset
+        transform.position = player.transform.position + offset;
     }
 }

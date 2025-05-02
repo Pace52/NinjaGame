@@ -59,7 +59,7 @@ public class SlideState : PlayerBaseState
         float timeSinceSlideStarted = Time.time - slideStartTime;
 
         // Apply sliding physics (e.g., decreasing velocity over time)
-        // float slideFactor = 1 - (timeSinceSlideStarted / slideDuration);
+        float slideFactor = 1 - (timeSinceSlideStarted / slideDuration);
         // stateMachine.RB.velocity = slideDirection * stateMachine.SlideSpeed * slideFactor;
 
         // Check for slide end condition (duration elapsed, collision, etc.)
@@ -91,11 +91,20 @@ public class SlideState : PlayerBaseState
 
     public override void Exit()
     {
+        // Assuming you have a collider component attached to the state machine's GameObject
+        //Collider collider = GetComponent<Collider>(); 
+
+        // If OriginalColliderHeight is a float variable stored in your StateMachine class
+        //collider.height = OriginalColliderHeight;
+
+        // Or, if you have an accessor method in your StateMachine for the original height:
+        //collider.height = StateMachine.OriginalColliderHeight; 
+
         // Restore collider size/shape
-        // stateMachine.Collider.height = stateMachine.OriginalColliderHeight; // Need properties
+        //stateMachine.Collider.height = stateMachine.OriginalColliderHeight; // Need properties
 
         // Ensure velocity is reasonable upon exiting slide
-        // stateMachine.RB.velocity *= 0.5f; // Example: reduce speed slightly
+        stateMachine.RB.linearVelocity *= 0.5f; // Example: reduce speed slightly
 
         Debug.Log($"[SlideState] Exiting Slide State after {Time.time - slideStartTime:F2}s");
     }
