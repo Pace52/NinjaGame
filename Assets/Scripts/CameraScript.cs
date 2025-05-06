@@ -1,29 +1,41 @@
-using UnityEngine;
+/*using UnityEngine;
 
 public class CameraScript : MonoBehaviour
 {
-    public GameObject player;
+    public GameObject Player;
     private Vector3 offset;
 
     void Start()
     {
-        if (player == null)
+        // Make sure player is assigned, otherwise find the player by tag
+        if (Player == null)
         {
-            player = GameObject.FindGameObjectWithTag("Player");
+            Player = GameObject.FindGameObjectWithTag("Player");
         }
 
-        // Initialize the offset based on the initial positions of the player and camera
-        offset = transform.position - player.transform.position;
+        // Only set the offset if player was found
+        if (Player != null)
+        {
+            offset = transform.position - Player.transform.position;
+        }
+        else
+        {
+            Debug.LogError("Player not found! Please assign a player object.");
+        }
     }
 
     void Update()
     {
-        if (player == null)
+        // Ensure player is assigned before updating the camera position
+        if (Player == null)
         {
-            player = GameObject.FindGameObjectWithTag("Player");
+            Player = GameObject.FindGameObjectWithTag("Player");
         }
 
-        // Move the camera to the player's position, maintaining the offset
-        transform.position = player.transform.position + offset;
+        // If player is found, update the camera position
+        if (Player != null)
+        {
+            transform.position = Player.transform.position + offset;
+        }
     }
-}
+}*/

@@ -30,6 +30,8 @@ public class PlayerStateMachine : MonoBehaviour
     public int JumpsRemaining { get; set; }
 
     [Header("Collider Settings")]
+    Collider collider;
+    public float OriginalColliderHeight = 0.5f;
     [SerializeField] private CapsuleCollider2D playerCollider; // Assign in Inspector
     [SerializeField] private Vector2 standingColliderSize = new Vector2(1f, 2f); // Example
     [SerializeField] private Vector2 standingColliderOffset = new Vector2(0f, 0f); // Example
@@ -62,7 +64,6 @@ public class PlayerStateMachine : MonoBehaviour
     public WallClingState WallClingState { get; private set; }
     public ShootState ShootState { get; private set; } // Add ShootState declaration
     public FallState FallState { get; private set; } // Add FallState declaration
-
     // Component References (Example)
     public Rigidbody2D RB { get; private set; }
     public Animator Animator { get; private set; }

@@ -5,6 +5,9 @@ public class SlideState : PlayerBaseState
     private float slideStartTime;
     private float slideDuration = 1.0f; // Example duration, adjust as needed
     private Vector2 slideDirection;
+    Collider collider;
+    float OriginalColliderHeight;
+    public collider.height;
 
     public SlideState(PlayerStateMachine stateMachine) : base(stateMachine)
     {
@@ -95,13 +98,13 @@ public class SlideState : PlayerBaseState
         //Collider collider = GetComponent<Collider>(); 
 
         // If OriginalColliderHeight is a float variable stored in your StateMachine class
-        //collider.height = OriginalColliderHeight;
+        collider.height = OriginalColliderHeight;
 
         // Or, if you have an accessor method in your StateMachine for the original height:
         //collider.height = StateMachine.OriginalColliderHeight; 
 
         // Restore collider size/shape
-        //stateMachine.Collider.height = stateMachine.OriginalColliderHeight; // Need properties
+        //stateMachine.GetComponent<Collider>().height = stateMachine.OriginalColliderHeight; // Need properties
 
         // Ensure velocity is reasonable upon exiting slide
         stateMachine.RB.linearVelocity *= 0.5f; // Example: reduce speed slightly
