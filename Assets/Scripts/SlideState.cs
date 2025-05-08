@@ -6,9 +6,8 @@ public class SlideState : PlayerBaseState
     private float slideDuration = 1.0f; // Example duration, adjust as needed
     private Vector2 slideDirection;
     Collider collider;
-    float OriginalColliderHeight;
-    public collider.height;
-
+    //float OriginalColliderHeight;
+    //float colliderheight;
     public SlideState(PlayerStateMachine stateMachine) : base(stateMachine)
     {
     }
@@ -92,13 +91,13 @@ public class SlideState : PlayerBaseState
         }
     }
 
-    public override void Exit()
+    /*public override void Exit()
     {
         // Assuming you have a collider component attached to the state machine's GameObject
         //Collider collider = GetComponent<Collider>(); 
 
         // If OriginalColliderHeight is a float variable stored in your StateMachine class
-        collider.height = OriginalColliderHeight;
+        //collider.height = OriginalColliderHeight;
 
         // Or, if you have an accessor method in your StateMachine for the original height:
         //collider.height = StateMachine.OriginalColliderHeight; 
@@ -107,8 +106,50 @@ public class SlideState : PlayerBaseState
         //stateMachine.GetComponent<Collider>().height = stateMachine.OriginalColliderHeight; // Need properties
 
         // Ensure velocity is reasonable upon exiting slide
-        stateMachine.RB.linearVelocity *= 0.5f; // Example: reduce speed slightly
+        //stateMachine.RB.linearVelocity *= 0.5f; // Example: reduce speed slightly
 
         Debug.Log($"[SlideState] Exiting Slide State after {Time.time - slideStartTime:F2}s");
+    }
+}*/
+    public override void Exit()
+    {
+    // Restore the collider size/offset back to original standing values
+    if (stateMachine.playerCollider != null)
+    {
+        stateMachine.playerCollider.size = stateMachine.standingColliderSize;
+        stateMachine.playerCollider.offset = stateMachine.standingColliderOffset;
+    }
+
+    // Reset velocity if necessary (e.g., stop downward motion after slide)
+    if (stateMachine.RB != null)
+    {
+        stateMachine.RB.linearVelocity = new Vector2(stateMachine.RB.linearVelocity.x, 0); // Optional: Reset the Y velocity
+    }
+
+    // Stop the sliding animation (if applicable)
+    if (stateMachine.Animator != null)
+    {
+        stateMachine.Animator.SetBool("IsSliding", false); // Ensure this matches your Animator parameter
+    }
+
+    // Check for crouch and transition accordingly
+    if (stateMachine.InputReader.IsCrouchHeld())
+    {
+        stateMachine.SwitchState(stateMachine.CrouchState);
+    }
+    else
+    {
+        // Transition to idle or walk depending on movement input
+        if (stateMachine.InputReader.IsRunPressed())
+        {
+            stateMachine.SwitchState(stateMachine.RunState);
+        }
+        else
+        {
+            stateMachine.SwitchState(stateMachine.IdleState); // Or WalkState if the player is still moving
+        }
+    }
+
+    Debug.Log($"[SlideState] Exiting Slide State after {Time.time - slideStartTime:F2}s");
     }
 }

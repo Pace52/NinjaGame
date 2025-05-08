@@ -32,6 +32,7 @@ public class PlayerStateMachine : MonoBehaviour
     [Header("Collider Settings")]
     Collider collider;
     public float OriginalColliderHeight = 0.5f;
+    //public collider.height;
     [SerializeField] private CapsuleCollider2D playerCollider; // Assign in Inspector
     [SerializeField] private Vector2 standingColliderSize = new Vector2(1f, 2f); // Example
     [SerializeField] private Vector2 standingColliderOffset = new Vector2(0f, 0f); // Example
@@ -79,6 +80,10 @@ public class PlayerStateMachine : MonoBehaviour
     {
         return Time.time - stateEnterTime;
     }
+    /*public ColliderHeight()
+    {
+        return collider.height;
+    }*/
 
     // InputReader abstraction (now a separate class)
     public InputReader InputReader { get; private set; } // Public property for states to access
