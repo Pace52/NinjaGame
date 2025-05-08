@@ -14,6 +14,11 @@ public class SlideState : PlayerBaseState
 
     public override void Enter()
     {
+        if (stateMachine.GetPlayerCollider() != null)
+    {
+        //stateMachine.GetPlayerCollider().size = stateMachine.standingColliderSize;
+        //stateMachine.GetPlayerCollider().offset = stateMachine.standingColliderOffset;
+    }
         slideStartTime = Time.time;
         slideDirection = stateMachine.InputReader.GetMovementInput().normalized; // Use InputReader property
         if (slideDirection == Vector2.zero)
@@ -114,11 +119,11 @@ public class SlideState : PlayerBaseState
     public override void Exit()
     {
     // Restore the collider size/offset back to original standing values
-    if (stateMachine.playerCollider != null)
+    /*if (stateMachine.playerCollider != null)
     {
         stateMachine.playerCollider.size = stateMachine.standingColliderSize;
         stateMachine.playerCollider.offset = stateMachine.standingColliderOffset;
-    }
+    }*/
 
     // Reset velocity if necessary (e.g., stop downward motion after slide)
     if (stateMachine.RB != null)
