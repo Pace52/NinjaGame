@@ -124,7 +124,7 @@ GameObject:
   - component: {fileID: 1914377576693117475}
   m_Layer: 0
   m_Name: Player Ninja
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -158,9 +158,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cffec91aed31c4c3b8a77c6630e5d50c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  coinCount: 0
   <MoveSpeed>k__BackingField: 5
   <WallJumpForce>k__BackingField: 7.5
   <MaxJumps>k__BackingField: 2
+  collider: {fileID: 0}
   playerCollider: {fileID: 1779346489392483852}
   standingColliderSize: {x: 1, y: 2}
   standingColliderOffset: {x: 0, y: 0}

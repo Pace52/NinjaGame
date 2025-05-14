@@ -13,15 +13,15 @@ public class RunState : PlayerBaseState
         enterTime = Time.time;
         // Play run animation
         if (stateMachine.Animator != null)
+        {
             stateMachine.Animator.Play("RunAnimation");
+        }
         Debug.Log($"[RunState] Entering Run State at {enterTime:F2}s");
-        // Play run sound if needed
-        // AudioManager.Instance?.Play("RunSound");
     }
 
     public override void Tick(float deltaTime)
     {
-        // --- NEW: Check for loss of ground or wall contact ---
+        // Check for loss of ground
         if (!stateMachine.IsGrounded())
         {
             if (stateMachine.IsTouchingWall() && stateMachine.RB.linearVelocity.y <= 0)
@@ -35,69 +35,63 @@ public class RunState : PlayerBaseState
             return;
         }
 
-        // Check for Shoot input first
-        if (stateMachine.InputReader.IsShootPressed()) // Use InputReader property
+        // Check for Shoot input
+        if (stateMachine.InputReader.IsShootPressed())
         {
             stateMachine.SwitchState(stateMachine.ShootState);
-            return; // Exit early
+            return;
         }
 
-        Vector2 moveInput = stateMachine.InputReader.GetMovementInput(); // Use InputReader property
+        Vector2 moveInput = stateMachine.InputReader.GetMovementInput();
 
-        // Walk/Run toggle
-        // Check for Crouch input FIRST if grounded
-        // Check for Slide input FIRST if grounded and moving
-        if (stateMachine.IsGrounded() && stateMachine.InputReader.IsCrouchHeld()) // Use InputReader property
+        // Check for Crouch/Slide input if grounded
+        if (stateMachine.IsGrounded() && stateMachine.InputReader.IsCrouchHeld())
         {
-            stateMachine.SwitchState(stateMachine.SlideState); // Transition to SlideState
-            return; // Exit early after state switch
+            if (moveInput.magnitude > 0.1f)
+            {
+                stateMachine.SwitchState(stateMachine.SlideState);
+            }
+            else
+            {
+                stateMachine.SwitchState(stateMachine.CrouchState);
+            }
+            return;
         }
 
         // Check for Jump input
         if (stateMachine.InputReader.IsJumpPressed() && stateMachine.JumpsRemaining > 0)
         {
             stateMachine.SwitchState(stateMachine.JumpState);
-            return; // Exit early after state switch
-        }
-
-
-        if (stateMachine.InputReader.IsRunPressed()) {
-            stateMachine.SwitchState(stateMachine.RunState);
-        }
-        else
-        {
-            stateMachine.SwitchState(stateMachine.WalkState);
             return;
         }
 
-        if (moveInput == Vector2.zero)
+        // Handle movement
+        if (stateMachine.RB != null)
         {
-            stateMachine.SwitchState(stateMachine.IdleState);
-            return;
+            float targetVelocityX = moveInput.x * stateMachine.MoveSpeed;
+            stateMachine.RB.linearVelocity = new Vector2(targetVelocityX, stateMachine.RB.linearVelocity.y);
         }
 
-        // Apply run movement (full speed, only affect horizontal velocity)
-        float targetVelocityX = moveInput.x * stateMachine.MoveSpeed;
-        stateMachine.RB.linearVelocity = new Vector2(targetVelocityX, stateMachine.RB.linearVelocity.y); // Preserve Y velocity
-
-        // Optionally update animation direction
-        if (stateMachine.Animator != null)
+        // Transition to walk/idle if run is released or no movement input
+        if (!stateMachine.InputReader.IsRunPressed() || moveInput.magnitude < 0.1f)
         {
-            stateMachine.Animator.SetFloat("Horizontal", moveInput.x);
-            stateMachine.Animator.SetFloat("Vertical", moveInput.y);
-        }
-
-        // Debug: log duration in state
-        float duration = Time.time - enterTime;
-        if (duration > 0 && Mathf.FloorToInt(duration) % 2 == 0)
-        {
-            Debug.Log($"[RunState] Running for {duration:F1} seconds");
+            if (moveInput.magnitude < 0.1f)
+            {
+                stateMachine.SwitchState(stateMachine.IdleState);
+            }
+            else
+            {
+                stateMachine.SwitchState(stateMachine.WalkState);
+            }
         }
     }
 
     public override void Exit()
     {
-        // Optionally stop run animation or sound
+        if (stateMachine.Animator != null)
+        {
+            stateMachine.Animator.SetBool("IsRunning", false);
+        }
         Debug.Log($"[RunState] Exiting Run State after {Time.time - enterTime:F2}s");
     }
 }

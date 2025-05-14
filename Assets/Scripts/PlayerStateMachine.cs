@@ -33,18 +33,17 @@ public class PlayerStateMachine : MonoBehaviour
 
     [Header("Collider Settings")]
     public Collider2D collider;
-    public float OriginalColliderHeight = 0.5f;
-    [SerializeField] private CapsuleCollider2D playerCollider; // Assign in Inspector
-    [SerializeField] private Vector2 standingColliderSize = new Vector2(1f, 2f);
-    [SerializeField] private Vector2 standingColliderOffset = new Vector2(0f, 0f);
-    [SerializeField] private Vector2 crouchingColliderSize = new Vector2(1f, 1f);
-    [SerializeField] private Vector2 crouchingColliderOffset = new Vector2(0f, -0.5f);
+    [SerializeField] private CapsuleCollider2D playerCollider;
+    [SerializeField] private Vector2 standingColliderSize = new Vector2(0.5f, 1.8f); // Adjusted for better proportions
+    [SerializeField] private Vector2 standingColliderOffset = new Vector2(0f, 0.9f); // Center point is at feet
+    [SerializeField] private Vector2 crouchingColliderSize = new Vector2(0.5f, 0.9f); // Half height when crouching
+    [SerializeField] private Vector2 crouchingColliderOffset = new Vector2(0f, 0.45f); // Adjusted to keep feet position
     [SerializeField] private float standUpCheckDistance = 0.1f;
     [SerializeField] private LayerMask groundLayer;
 
     [Header("Ground Check Settings")]
-    [SerializeField] private Transform groundCheckPoint; // Assign an empty GameObject childed to the player at their feet
-    [SerializeField] private float groundCheckRadius = 0.2f; // Adjust radius as needed
+    [SerializeField] private Transform groundCheckPoint;
+    [SerializeField] private float groundCheckRadius = 0.1f;
 
     [Header("Crouch Settings")]
     [SerializeField] public float CrouchSpeedMultiplier { get; private set; } = 0.25f; // Half of WalkState's 0.5 multiplier
@@ -93,50 +92,66 @@ public class PlayerStateMachine : MonoBehaviour
     {
         // Get Components
         RB = GetComponent<Rigidbody2D>();
-        Animator = GetComponentInChildren<Animator>(); // Or GetComponent<Animator>()
+        Animator = GetComponentInChildren<Animator>();
+        
+        // Setup collider if not assigned
         if (playerCollider == null)
         {
             playerCollider = GetComponent<CapsuleCollider2D>();
-            if (playerCollider != null)
-            {
-                // Store initial size/offset if not set via Inspector
-                if (standingColliderSize == Vector2.zero) standingColliderSize = playerCollider.size;
-                if (standingColliderOffset == Vector2.zero && playerCollider.offset != Vector2.zero) standingColliderOffset = playerCollider.offset;
-            }
-            else
-            {
-                Debug.LogError("Player Collider not found or assigned!", this);
-            }
         }
 
-    
-        // Initialize input reader
-        InputReader = new InputReader(); // Instantiate the new InputReader class
+        if (playerCollider != null)
+        {
+            // Initialize collider with standing size
+            playerCollider.size = standingColliderSize;
+            playerCollider.offset = standingColliderOffset;
+        }
+        else
+        {
+            Debug.LogError("Player Collider not found or assigned!", this);
+        }
 
+        // Setup ground check point if not assigned
+        if (groundCheckPoint == null)
+        {
+            // Create ground check point
+            GameObject checkPoint = new GameObject("GroundCheckPoint");
+            groundCheckPoint = checkPoint.transform;
+            groundCheckPoint.parent = transform;
+            groundCheckPoint.localPosition = new Vector3(0, -0.1f, 0); // Slightly below feet
+        }
+
+        // Initialize input reader
+        InputReader = new InputReader();
+
+        // Initialize states
+        InitializeStates();
+    }
+
+    private void InitializeStates()
+    {
         // Initialize concrete states
-        IdleState = new PlayerIdleState(this); // Instantiate the new PlayerIdleState class
-        // MoveState removed
+        IdleState = new PlayerIdleState(this);
         WalkState = new WalkState(this);
         RunState = new RunState(this);
-    
+        JumpState = new JumpState(this);
+        CrouchState = new CrouchState(this);
+        SlideState = new SlideState(this);
+        WallClingState = new WallClingState(this);
+        ShootState = new ShootState(this);
+        FallState = new FallState(this);
+
         // Register states
-        stateRegistry[nameof(PlayerIdleState)] = IdleState; // Register the new PlayerIdleState
-        // MoveState registration removed
+        stateRegistry.Clear();
+        stateRegistry[nameof(PlayerIdleState)] = IdleState;
         stateRegistry[nameof(WalkState)] = WalkState;
         stateRegistry[nameof(RunState)] = RunState;
-        JumpState = new JumpState(this);
         stateRegistry[nameof(JumpState)] = JumpState;
-        CrouchState = new CrouchState(this);
         stateRegistry[nameof(CrouchState)] = CrouchState;
-        SlideState = new SlideState(this);
-        // ... register other states
-        WallClingState = new WallClingState(this);
-        stateRegistry[nameof(WallClingState)] = WallClingState;
         stateRegistry[nameof(SlideState)] = SlideState;
-        ShootState = new ShootState(this); // Initialize ShootState
-        stateRegistry[nameof(ShootState)] = ShootState; // Register ShootState
-        FallState = new FallState(this); // Initialize FallState
-        stateRegistry[nameof(FallState)] = FallState; // Register FallState
+        stateRegistry[nameof(WallClingState)] = WallClingState;
+        stateRegistry[nameof(ShootState)] = ShootState;
+        stateRegistry[nameof(FallState)] = FallState;
 
         // Initialize jumps
         JumpsRemaining = MaxJumps;
@@ -203,22 +218,25 @@ public class PlayerStateMachine : MonoBehaviour
     // Robust ground check using OverlapCircle
     public bool IsGrounded()
     {
-        // During coyote time after jump, always return false
         if (jumpGroundedGraceTimer > 0f)
             return false;
 
         if (groundCheckPoint == null)
         {
-             Debug.LogError("Ground Check Point not assigned in the Inspector!", this);
-             return false; // Cannot check without the point
+            Debug.LogError("Ground Check Point not assigned!", this);
+            return false;
         }
-        // Check if the circle overlaps with anything on the ground layer
+
+        // Perform the ground check
         bool grounded = Physics2D.OverlapCircle(groundCheckPoint.position, groundCheckRadius, groundLayer);
-        // Warn if grounded while moving up (likely ground check is inside collider)
-        if (grounded && RB != null && RB.linearVelocity.y > 0.1f)
+        
+        // Reset jumps when grounded
+        if (grounded && !wasGroundedLastFrame)
         {
-            Debug.LogWarning("[PlayerStateMachine] IsGrounded() is true while moving upward. Adjust groundCheckPoint position or groundCheckRadius in the Inspector so it is just below the feet and not inside the collider.");
+            JumpsRemaining = MaxJumps;
         }
+
+        wasGroundedLastFrame = grounded;
         return grounded;
     }
 
@@ -236,32 +254,64 @@ public class PlayerStateMachine : MonoBehaviour
     public void SetColliderCrouching()
     {
         if (playerCollider == null) return;
+        
+        // Store current y position of feet
+        float feetY = transform.position.y - playerCollider.offset.y + (playerCollider.size.y / 2f);
+        
+        // Set new size and offset
         playerCollider.size = crouchingColliderSize;
         playerCollider.offset = crouchingColliderOffset;
+        
+        // Adjust position to maintain feet position
+        float newFeetY = transform.position.y - playerCollider.offset.y + (playerCollider.size.y / 2f);
+        float adjustment = feetY - newFeetY;
+        transform.position = new Vector3(transform.position.x, transform.position.y + adjustment, transform.position.z);
     }
 
     public void SetColliderStanding()
     {
         if (playerCollider == null) return;
-        playerCollider.size = standingColliderSize;
-        playerCollider.offset = standingColliderOffset;
+        
+        // Only change if we can stand up
+        if (CanStandUp())
+        {
+            // Store current y position of feet
+            float feetY = transform.position.y - playerCollider.offset.y + (playerCollider.size.y / 2f);
+            
+            // Set new size and offset
+            playerCollider.size = standingColliderSize;
+            playerCollider.offset = standingColliderOffset;
+            
+            // Adjust position to maintain feet position
+            float newFeetY = transform.position.y - playerCollider.offset.y + (playerCollider.size.y / 2f);
+            float adjustment = feetY - newFeetY;
+            transform.position = new Vector3(transform.position.x, transform.position.y + adjustment, transform.position.z);
+        }
     }
 
     public bool CanStandUp()
     {
-        if (playerCollider == null) return true; // Cannot check, assume okay
+        if (playerCollider == null) return true;
 
-        // Calculate the top position of the standing collider
-        Vector2 standingTopPoint = (Vector2)transform.position + standingColliderOffset + Vector2.up * (standingColliderSize.y / 2f);
-        // Calculate the size of the check area (slightly larger than the top part of the standing collider)
-        Vector2 checkSize = new Vector2(standingColliderSize.x * 0.9f, standUpCheckDistance); // Check slightly narrower
-        // Calculate the center of the check area
-        Vector2 checkCenter = standingTopPoint + Vector2.up * (standUpCheckDistance / 2f);
+        // Calculate the position where the standing collider would be
+        Vector2 standingCenter = (Vector2)transform.position + standingColliderOffset;
+        
+        // Check for obstacles using a box cast
+        float extraHeight = standingColliderSize.y - crouchingColliderSize.y;
+        Vector2 boxSize = new Vector2(standingColliderSize.x * 0.9f, extraHeight);
+        Vector2 boxCenter = standingCenter + Vector2.up * (crouchingColliderSize.y / 2f);
+        
+        // Perform the check
+        RaycastHit2D hit = Physics2D.BoxCast(
+            boxCenter,
+            boxSize,
+            0f,
+            Vector2.up,
+            standUpCheckDistance,
+            groundLayer
+        );
 
-        // Perform an overlap check
-        Collider2D hit = Physics2D.OverlapBox(checkCenter, checkSize, 0f, groundLayer);
-
-        return hit == null; // Can stand up if nothing is hit
+        return !hit.collider;
     }
     private void OnTriggerEnter2D(Collider2D other)
     {
