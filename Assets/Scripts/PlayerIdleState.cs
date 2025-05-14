@@ -13,7 +13,6 @@ public class PlayerIdleState : PlayerBaseState
         stateMachine.Animator.Play("Idle");
         Debug.Log("Entering Idle State");
     }
-
     public override void Tick(float deltaTime)
     {
         // --- NEW: Check for loss of ground or wall contact ---

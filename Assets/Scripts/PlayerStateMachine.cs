@@ -19,6 +19,7 @@ public abstract class PlayerBaseState
 // The main state machine component
 public class PlayerStateMachine : MonoBehaviour
 {
+    public int coinCount = 0;
     private bool wasGroundedLastFrame = true;
 
     // --- Coyote time (grounded grace period) ---
@@ -31,16 +32,15 @@ public class PlayerStateMachine : MonoBehaviour
     public int JumpsRemaining { get; set; }
 
     [Header("Collider Settings")]
-    public Collider collider;
+    public Collider2D collider;
     public float OriginalColliderHeight = 0.5f;
-    //public collider.height;
     [SerializeField] private CapsuleCollider2D playerCollider; // Assign in Inspector
-    [SerializeField] private Vector2 standingColliderSize = new Vector2(1f, 2f); // Example
-    [SerializeField] private Vector2 standingColliderOffset = new Vector2(0f, 0f); // Example
-    [SerializeField] private Vector2 crouchingColliderSize = new Vector2(1f, 1f); // Example
-    [SerializeField] private Vector2 crouchingColliderOffset = new Vector2(0f, -0.3f); // Example **WAS 0.5***
-    [SerializeField] private float standUpCheckDistance = 0.1f; // Distance above collider to check
-    [SerializeField] private LayerMask groundLayer; // Assign layers considered ground/obstacles
+    [SerializeField] private Vector2 standingColliderSize = new Vector2(1f, 2f);
+    [SerializeField] private Vector2 standingColliderOffset = new Vector2(0f, 0f);
+    [SerializeField] private Vector2 crouchingColliderSize = new Vector2(1f, 1f);
+    [SerializeField] private Vector2 crouchingColliderOffset = new Vector2(0f, -0.5f);
+    [SerializeField] private float standUpCheckDistance = 0.1f;
+    [SerializeField] private LayerMask groundLayer;
 
     [Header("Ground Check Settings")]
     [SerializeField] private Transform groundCheckPoint; // Assign an empty GameObject childed to the player at their feet
@@ -263,5 +263,19 @@ public class PlayerStateMachine : MonoBehaviour
 
         return hit == null; // Can stand up if nothing is hit
     }
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        // Check if the collided object is a coin
+        if (other.CompareTag("Coin"))
+        {
+            // Remove the coin from the scene
+            Destroy(other.gameObject);
 
+            // Increment the coin count by one
+            coinCount++;
+
+            // Optionally, print the new coin count for debugging
+            Debug.Log("Coins collected: " + coinCount);
+        }
+    } 
 }

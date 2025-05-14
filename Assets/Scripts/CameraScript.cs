@@ -1,4 +1,4 @@
-/*using UnityEngine;
+using UnityEngine;
 
 public class CameraScript : MonoBehaviour
 {
@@ -38,4 +38,4 @@ public class CameraScript : MonoBehaviour
             transform.position = Player.transform.position + offset;
         }
     }
-}*/
+}
