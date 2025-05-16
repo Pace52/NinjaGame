@@ -4,38 +4,49 @@ public class CameraScript : MonoBehaviour
 {
     public GameObject Player;
     private Vector3 offset;
+    private Camera cam;
+    public float smoothSpeed = 0.125f; // Smoothing factor for camera movement
+    public Vector3 positionOffset = new Vector3(0, 1, -10); // Offset from player position
 
     void Start()
     {
+        // Get camera component
+        cam = GetComponent<Camera>();
+        if (cam != null)
+        {
+            // Set to orthographic mode
+            cam.orthographic = true;
+            cam.orthographicSize = 5f; // Adjust this value to change zoom level
+        }
+
         // Make sure player is assigned, otherwise find the player by tag
         if (Player == null)
         {
             Player = GameObject.FindGameObjectWithTag("Player");
+            if (Player == null)
+            {
+                Debug.LogError("Player not found! Make sure the Player object has the 'Player' tag.");
+                return;
+            }
         }
 
-        // Only set the offset if player was found
-        if (Player != null)
-        {
-            offset = transform.position - Player.transform.position;
-        }
-        else
-        {
-            Debug.LogError("Player not found! Please assign a player object.");
-        }
+        // Set initial position
+        transform.position = Player.transform.position + positionOffset;
     }
 
-    void Update()
+    void LateUpdate()
     {
-        // Ensure player is assigned before updating the camera position
         if (Player == null)
         {
             Player = GameObject.FindGameObjectWithTag("Player");
+            if (Player == null) return;
         }
 
-        // If player is found, update the camera position
-        if (Player != null)
-        {
-            transform.position = Player.transform.position + offset;
-        }
+        // Calculate desired position
+        Vector3 desiredPosition = Player.transform.position + positionOffset;
+        
+        // Smoothly move camera
+        Vector3 smoothedPosition = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed);
+        transform.position = smoothedPosition;
     }
 }

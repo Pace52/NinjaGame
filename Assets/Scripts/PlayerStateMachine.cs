@@ -40,6 +40,7 @@ public class PlayerStateMachine : MonoBehaviour
     [SerializeField] private Vector2 crouchingColliderOffset = new Vector2(0f, 0.45f); // Adjusted to keep feet position
     [SerializeField] private float standUpCheckDistance = 0.1f;
     [SerializeField] private LayerMask groundLayer;
+    [SerializeField] private LayerMask wallLayer; // Add separate layer for walls
 
     [Header("Ground Check Settings")]
     [SerializeField] private Transform groundCheckPoint;
@@ -48,6 +49,10 @@ public class PlayerStateMachine : MonoBehaviour
     [Header("Crouch Settings")]
     [SerializeField] public float CrouchSpeedMultiplier { get; private set; } = 0.25f; // Half of WalkState's 0.5 multiplier
 
+    [Header("Wall Check Settings")]
+    [SerializeField] private float wallCheckDistance = 0.1f;
+    [SerializeField] private float wallDetachDelay = 0.1f; // Time before can reattach to wall
+    private float lastWallDetachTime;
 
     private PlayerBaseState currentState;
 
@@ -118,7 +123,13 @@ public class PlayerStateMachine : MonoBehaviour
             GameObject checkPoint = new GameObject("GroundCheckPoint");
             groundCheckPoint = checkPoint.transform;
             groundCheckPoint.parent = transform;
-            groundCheckPoint.localPosition = new Vector3(0, -0.1f, 0); // Slightly below feet
+            groundCheckPoint.localPosition = new Vector3(0, -0.1f, 0);
+        }
+
+        // Set wall layer same as ground layer if not set
+        if (wallLayer == 0)
+        {
+            wallLayer = groundLayer;
         }
 
         // Initialize input reader
@@ -126,6 +137,9 @@ public class PlayerStateMachine : MonoBehaviour
 
         // Initialize states
         InitializeStates();
+
+        // Set initial wall detach time
+        lastWallDetachTime = -wallDetachDelay;
     }
 
     private void InitializeStates()
@@ -243,12 +257,48 @@ public class PlayerStateMachine : MonoBehaviour
     // Simple wall check (replace with your own logic)
     public bool IsTouchingWall()
     {
-        // Wall detection using 2D raycast
-        float wallCheckDistance = 0.1f; // How far to check
-        Vector2 direction = transform.localScale.x > 0 ? Vector2.right : Vector2.left; // Check based on facing direction
-        RaycastHit2D hit = Physics2D.Raycast(playerCollider.bounds.center, direction, playerCollider.bounds.extents.x + wallCheckDistance, groundLayer);
-        Debug.DrawRay(playerCollider.bounds.center, direction * (playerCollider.bounds.extents.x + wallCheckDistance), hit.collider != null ? Color.green : Color.red);
-        return hit.collider != null;
+        // Don't check for wall if we recently detached
+        if (Time.time - lastWallDetachTime < wallDetachDelay)
+        {
+            return false;
+        }
+
+        // Get the direction based on input or facing direction
+        Vector2 moveInput = InputReader.GetMovementInput();
+        Vector2 direction;
+        
+        if (moveInput.x != 0)
+        {
+            // Use input direction if moving
+            direction = new Vector2(Mathf.Sign(moveInput.x), 0);
+        }
+        else
+        {
+            // Use facing direction if not moving
+            direction = transform.localScale.x > 0 ? Vector2.right : Vector2.left;
+        }
+
+        // Calculate ray origin points (top and bottom of collider)
+        Vector2 center = playerCollider.bounds.center;
+        float height = playerCollider.bounds.size.y;
+        Vector2 topPoint = center + Vector2.up * (height * 0.3f);
+        Vector2 bottomPoint = center - Vector2.up * (height * 0.3f);
+
+        // Cast rays from both points
+        RaycastHit2D hitTop = Physics2D.Raycast(topPoint, direction, wallCheckDistance, wallLayer);
+        RaycastHit2D hitBottom = Physics2D.Raycast(bottomPoint, direction, wallCheckDistance, wallLayer);
+
+        // Debug visualization
+        Debug.DrawRay(topPoint, direction * wallCheckDistance, hitTop.collider != null ? Color.green : Color.red);
+        Debug.DrawRay(bottomPoint, direction * wallCheckDistance, hitBottom.collider != null ? Color.green : Color.red);
+
+        // Return true only if both rays hit
+        return hitTop.collider != null && hitBottom.collider != null;
+    }
+
+    public void DetachFromWall()
+    {
+        lastWallDetachTime = Time.time;
     }
 
     public void SetColliderCrouching()

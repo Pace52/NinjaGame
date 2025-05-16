@@ -47,5 +47,6 @@ public class InputReader
         // Assumes a "Fire1" button is defined (default is Left Ctrl/Mouse 0)
         return Input.GetButtonDown("Fire1");
         // If you want continuous fire while held, use GetButton("Fire1")
+        Debug.Log("Shoot pressed");
     }
 }
