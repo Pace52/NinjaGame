@@ -9,6 +9,7 @@ public class ItemBox : MonoBehaviour
     [SerializeField] private int coinsToSpawn = 3;
     [SerializeField] private float coinSpawnForce = 5f;
     [SerializeField] private float coinSpreadAngle = 45f;
+    [SerializeField] private float gravityScale = 1f;
 
     private bool isFalling = false;
     private Rigidbody2D rb;
@@ -19,8 +20,9 @@ public class ItemBox : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         boxCollider = GetComponent<BoxCollider2D>();
         
-        // Initially disable gravity
+        // Initially disable gravity and make kinematic
         rb.gravityScale = 0;
+        rb.isKinematic = true;
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -45,7 +47,10 @@ public class ItemBox : MonoBehaviour
     private void StartFalling()
     {
         isFalling = true;
-        rb.gravityScale = 1;
+        rb.isKinematic = false;
+        rb.gravityScale = gravityScale;
+        // Add a small initial downward velocity
+        rb.linearVelocity = new Vector2(0, -fallSpeed);
     }
 
     private void SpawnCoins()

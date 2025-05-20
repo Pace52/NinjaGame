@@ -6,6 +6,9 @@ public class WallClingState : PlayerBaseState
     private float enterTime;
     private bool jumpHeldOnEnter;
     private Vector2 lastWallNormal;
+    private float detachCooldown = 0.2f;
+    private float lastDetachTime;
+    private float minSlideTime = 0.1f;
 
     public WallClingState(PlayerStateMachine stateMachine) : base(stateMachine) { }
 
@@ -19,10 +22,11 @@ public class WallClingState : PlayerBaseState
         lastWallNormal = moveInput.x != 0 ? new Vector2(-Mathf.Sign(moveInput.x), 0) : 
                         (stateMachine.transform.localScale.x > 0 ? Vector2.left : Vector2.right);
 
-        // Reduce vertical velocity
+        // Reduce vertical velocity gradually
         if (stateMachine.RB != null)
         {
-            stateMachine.RB.linearVelocity = new Vector2(0, Mathf.Max(-slideSpeed, stateMachine.RB.linearVelocity.y));
+            float currentVelocity = stateMachine.RB.linearVelocity.y;
+            stateMachine.RB.linearVelocity = new Vector2(0, Mathf.Lerp(currentVelocity, -slideSpeed, 0.5f));
         }
 
         // Set animation
@@ -38,6 +42,19 @@ public class WallClingState : PlayerBaseState
     {
         // Check for detachment conditions
         Vector2 moveInput = stateMachine.InputReader.GetMovementInput();
+        
+        // Prevent immediate reattachment after detaching
+        if (Time.time - lastDetachTime < detachCooldown)
+        {
+            stateMachine.SwitchState(stateMachine.FallState);
+            return;
+        }
+
+        // Ensure minimum time in wall cling state
+        if (Time.time - enterTime < minSlideTime)
+        {
+            return;
+        }
         
         // Detach if pushing away from wall
         if (moveInput.x != 0 && Mathf.Sign(moveInput.x) == Mathf.Sign(lastWallNormal.x))
@@ -73,10 +90,13 @@ public class WallClingState : PlayerBaseState
             jumpHeldOnEnter = false;
         }
 
-        // Apply wall slide
+        // Apply wall slide with smooth deceleration
         if (stateMachine.RB != null)
         {
-            stateMachine.RB.linearVelocity = new Vector2(0, -slideSpeed);
+            float targetVelocity = -slideSpeed;
+            float currentVelocity = stateMachine.RB.linearVelocity.y;
+            float newVelocity = Mathf.Lerp(currentVelocity, targetVelocity, deltaTime * 5f);
+            stateMachine.RB.linearVelocity = new Vector2(0, newVelocity);
         }
     }
 
@@ -87,7 +107,7 @@ public class WallClingState : PlayerBaseState
             // Calculate wall jump direction
             Vector2 jumpDirection = new Vector2(lastWallNormal.x, 1).normalized;
             
-            // Apply wall jump force
+            // Apply wall jump force with a slight upward bias
             stateMachine.RB.linearVelocity = Vector2.zero; // Clear current velocity
             stateMachine.RB.AddForce(jumpDirection * stateMachine.WallJumpForce, ForceMode2D.Impulse);
             
@@ -101,6 +121,7 @@ public class WallClingState : PlayerBaseState
 
     private void DetachFromWall()
     {
+        lastDetachTime = Time.time;
         stateMachine.DetachFromWall();
         stateMachine.SwitchState(stateMachine.FallState);
     }

@@ -21,6 +21,9 @@ public class PlayerStateMachine : MonoBehaviour
 {
     public int coinCount = 0;
     private bool wasGroundedLastFrame = true;
+    private bool isDead = false;
+    private Vector3 initialPosition;
+    private LevelLoader levelLoader;
 
     // --- Coyote time (grounded grace period) ---
     //private CapsuleCollider2D playerCollider;
@@ -98,6 +101,8 @@ public class PlayerStateMachine : MonoBehaviour
         // Get Components
         RB = GetComponent<Rigidbody2D>();
         Animator = GetComponentInChildren<Animator>();
+        levelLoader = FindObjectOfType<LevelLoader>();
+        initialPosition = transform.position;
         
         // Setup collider if not assigned
         if (playerCollider == null)
@@ -183,6 +188,13 @@ public class PlayerStateMachine : MonoBehaviour
     }
     private void Update()
     {
+        // Check for death condition
+        if (!isDead && transform.position.y < -30f)
+        {
+            Die();
+            return;
+        }
+
         // Update coyote time timer
         if (jumpGroundedGraceTimer > 0f)
             jumpGroundedGraceTimer -= Time.deltaTime;
@@ -377,5 +389,48 @@ public class PlayerStateMachine : MonoBehaviour
             // Optionally, print the new coin count for debugging
             Debug.Log("Coins collected: " + coinCount);
         }
-    } 
+    }
+
+    private void Die()
+    {
+        isDead = true;
+        
+        // Disable player movement
+        if (RB != null)
+        {
+            RB.linearVelocity = Vector2.zero;
+            RB.isKinematic = true;
+        }
+
+        // Trigger death animation if available
+        if (Animator != null)
+        {
+            Animator.SetTrigger("Die");
+        }
+
+        // Reset level after a short delay
+        Invoke("ResetLevel", 1.5f);
+    }
+
+    private void ResetLevel()
+    {
+        // Reset player state
+        isDead = false;
+        if (RB != null)
+        {
+            RB.isKinematic = false;
+        }
+
+        // Reset player position
+        transform.position = initialPosition;
+
+        // Reset level if level loader exists
+        if (levelLoader != null)
+        {
+            levelLoader.LoadMap();
+        }
+
+        // Reset to idle state
+        SwitchState(IdleState);
+    }
 }

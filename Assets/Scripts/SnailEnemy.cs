@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 public class SnailEnemy : MonoBehaviour
 {
@@ -13,6 +14,8 @@ public class SnailEnemy : MonoBehaviour
     [SerializeField] private float playerDetectionRange = 5f;
     [SerializeField] private LayerMask playerLayer;
 
+    [SerializeField] private int maxHealth = 2;
+    private int currentHealth;
     private Vector2 startPosition;
     private bool movingRight = true;
     private Rigidbody2D rb;
@@ -23,6 +26,7 @@ public class SnailEnemy : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         startPosition = transform.position;
+        currentHealth = maxHealth;
     }
 
     private void Update()
@@ -40,7 +44,7 @@ public class SnailEnemy : MonoBehaviour
         float direction = movingRight ? 1f : -1f;
         
         // Move the snail
-        rb.velocity = new Vector2(moveSpeed * direction, rb.velocity.y);
+        rb.linearVelocity = new Vector2(moveSpeed * direction, rb.linearVelocity.y);
 
         // Update sprite direction
         spriteRenderer.flipX = !movingRight;
@@ -102,6 +106,42 @@ public class SnailEnemy : MonoBehaviour
             // Handle player collision - you can add damage logic here
             Debug.Log("Player hit by snail!");
         }
+
+        // Check if we hit a wall or obstacle
+        if (collision.gameObject.CompareTag("Ground") || collision.gameObject.CompareTag("Wall"))
+        {
+            movingRight = !movingRight;
+        }
+    }
+
+    public void TakeDamage()
+    {
+        currentHealth--;
+        
+        // Flash effect
+        if (spriteRenderer != null)
+        {
+            StartCoroutine(FlashEffect());
+        }
+
+        if (currentHealth <= 0)
+        {
+            Die();
+        }
+    }
+
+    private System.Collections.IEnumerator FlashEffect()
+    {
+        Color originalColor = spriteRenderer.color;
+        spriteRenderer.color = Color.red;
+        yield return new WaitForSeconds(0.1f);
+        spriteRenderer.color = originalColor;
+    }
+
+    private void Die()
+    {
+        // Add death effects here (particles, sound, etc.)
+        Destroy(gameObject);
     }
 
     private void OnDrawGizmos()
