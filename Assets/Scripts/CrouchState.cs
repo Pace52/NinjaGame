@@ -4,9 +4,7 @@ public class CrouchState : PlayerBaseState
 {
     private float enterTime;
     private float crouchMoveSpeed;
-    private Vector2 moveInput;
-    private bool wasMovingOnEnter;
-
+    private float CrouchSpeedMultiplier = 0.25f;
     public CrouchState(PlayerStateMachine stateMachine) : base(stateMachine)
     {
         // Calculate actual crouch speed based on multipliers
@@ -17,28 +15,16 @@ public class CrouchState : PlayerBaseState
     public override void Enter()
     {
         enterTime = Time.time;
-        moveInput = stateMachine.InputReader.GetMovementInput();
-        wasMovingOnEnter = moveInput.magnitude > 0.1f;
-
-        // Set to crouching collider
         stateMachine.SetColliderCrouching();
-
         // Play crouch animation
         if (stateMachine.Animator != null)
-        {
-            stateMachine.Animator.SetBool("IsCrouching", true);
-            if (wasMovingOnEnter)
-            {
-                stateMachine.Animator.SetBool("IsMoving", true);
-            }
-        }
-
+            stateMachine.Animator.Play("Crouch"); // Replace with actual animation name
         Debug.Log($"[CrouchState] Entering Crouch State at {enterTime:F2}s");
     }
 
     public override void Tick(float deltaTime)
     {
-        // Check for ground contact loss
+        // --- NEW: Check for loss of ground or wall contact ---
         if (!stateMachine.IsGrounded())
         {
             if (stateMachine.IsTouchingWall() && stateMachine.RB.linearVelocity.y <= 0)
@@ -52,84 +38,77 @@ public class CrouchState : PlayerBaseState
             return;
         }
 
-        // Check for Shoot input
-        if (stateMachine.InputReader.IsShootPressed())
+        // Check for Shoot input first
+        if (stateMachine.InputReader.IsShootPressed()) // Use InputReader property
         {
             stateMachine.SwitchState(stateMachine.ShootState);
-            return;
+            return; // Exit early
         }
 
-        // Get current movement input
-        moveInput = stateMachine.InputReader.GetMovementInput();
+        // --- Check for Exit Conditions ---
 
-        // Handle movement while crouching
-        if (stateMachine.RB != null && moveInput != Vector2.zero)
+        // 1. Crouch key released?
+        if (!stateMachine.InputReader.IsCrouchHeld()) // Use InputReader property
         {
-            // Apply crouch movement
-            Vector2 targetVelocity = new Vector2(moveInput.x * crouchMoveSpeed, stateMachine.RB.linearVelocity.y);
-            stateMachine.RB.linearVelocity = targetVelocity;
-
-            // Update animation
-            if (stateMachine.Animator != null)
-            {
-                stateMachine.Animator.SetBool("IsMoving", true);
-            }
-        }
-        else if (stateMachine.Animator != null)
-        {
-            stateMachine.Animator.SetBool("IsMoving", false);
-        }
-
-        // Check for slide initiation
-        if (moveInput.magnitude > 0.1f && stateMachine.InputReader.IsRunPressed())
-        {
-            stateMachine.SwitchState(stateMachine.SlideState);
-            return;
-        }
-
-        // Check for uncrouch
-        if (!stateMachine.InputReader.IsCrouchHeld())
-        {
+            // Check if space to stand up
             if (stateMachine.CanStandUp())
             {
                 // Determine next state based on input
-                if (moveInput.magnitude > 0.1f)
-                {
-                    if (stateMachine.InputReader.IsRunPressed())
-                    {
-                        stateMachine.SwitchState(stateMachine.RunState);
-                    }
-                    else
-                    {
-                        stateMachine.SwitchState(stateMachine.WalkState);
-                    }
-                }
-                else
+                Vector2 moveInputCheck = stateMachine.InputReader.GetMovementInput(); // Use InputReader property
+                if (moveInputCheck == Vector2.zero)
                 {
                     stateMachine.SwitchState(stateMachine.IdleState);
                 }
+                else
+                {
+                    if (stateMachine.InputReader.IsRunPressed()) // Use InputReader property
+                        stateMachine.SwitchState(stateMachine.RunState);
+                    else
+                        stateMachine.SwitchState(stateMachine.WalkState);
+                }
+                return; // Exit after state switch
             }
             else
             {
+                // Cannot stand up, remain crouching (play bump sound/effect?)
                 Debug.Log("[CrouchState] Cannot stand up, obstacle detected.");
             }
+        }
+
+        // 2. No longer grounded? (Handled above)
+
+        // --- Apply Crouch Movement ---
+        Vector2 moveInput = stateMachine.InputReader.GetMovementInput(); // Use InputReader property
+        // Apply movement using the calculated crouch speed
+        stateMachine.RB.linearVelocity = moveInput * crouchMoveSpeed;
+
+        // Update animation blend tree if needed
+        if (stateMachine.Animator != null && moveInput != Vector2.zero)
+        {
+            stateMachine.Animator.SetFloat("Horizontal", moveInput.x);
+            stateMachine.Animator.SetFloat("Vertical", moveInput.y); // If needed
         }
     }
 
     public override void Exit()
     {
-        // Reset crouch animation
-        if (stateMachine.Animator != null)
-        {
-            stateMachine.Animator.SetBool("IsCrouching", false);
-            stateMachine.Animator.SetBool("IsMoving", false);
-        }
-
-        // Only restore standing collider if we can stand up and we're not going to slide
-        if (stateMachine.CanStandUp() && !stateMachine.InputReader.IsCrouchHeld())
-        {
+        // Only restore collider if we could actually stand up (handled in Tick)
+        // Ensure collider is restored if exiting for other reasons (e.g., death state)
+        // We rely on the Tick logic ensuring CanStandUp before switching state.
+         if (stateMachine.CanStandUp()) // Double check on exit
+         {
             stateMachine.SetColliderStanding();
-        }
+         }
+         else
+         {
+            // This case should ideally not happen if Tick logic is correct.
+            // If it does, we might be stuck crouching.
+            Debug.LogError("[CrouchState] Exiting state but cannot stand up!");
+         }
+
+        // Stop crouch animation if needed
+        // if (stateMachine.Animator != null)
+        //     stateMachine.Animator.StopPlayback(); // Or transition to appropriate animation
 
         Debug.Log($"[CrouchState] Exiting Crouch State after {Time.time - enterTime:F2}s");
     }

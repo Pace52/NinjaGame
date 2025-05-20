@@ -5,76 +5,143 @@ public class SnailEnemy : MonoBehaviour
 {
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 2f;
-    [SerializeField] private float patrolDistance = 3f;
-    [SerializeField] private LayerMask groundLayer;
     [SerializeField] private float groundCheckDistance = 0.2f;
     [SerializeField] private float wallCheckDistance = 0.2f;
+    [SerializeField] private LayerMask groundLayer;
 
-    [Header("Detection")]
-    [SerializeField] private float playerDetectionRange = 5f;
-    [SerializeField] private LayerMask playerLayer;
-
+    [Header("Combat")]
     [SerializeField] private int maxHealth = 2;
+    [SerializeField] private float attackRange = 1f;
+    [SerializeField] private float attackCooldown = 1f;
+    [SerializeField] private int attackDamage = 1;
+    [SerializeField] private float attackKnockback = 5f;
     private int currentHealth;
-    private Vector2 startPosition;
-    private bool movingRight = true;
+    private float lastAttackTime;
+    private bool canAttack = true;
+
     private Rigidbody2D rb;
     private SpriteRenderer spriteRenderer;
+    private Transform player;
+    private bool movingRight = true;
 
     private void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
-        startPosition = transform.position;
         currentHealth = maxHealth;
+        
+        // Find player
+        player = GameObject.FindGameObjectWithTag("Player")?.transform;
+        if (player == null)
+        {
+            Debug.LogError("Player not found! Make sure the player has the 'Player' tag.");
+        }
     }
 
     private void Update()
     {
-        // Check for player in range
-        CheckForPlayer();
+        if (player == null) return;
 
-        // Patrol movement
-        Patrol();
-    }
-
-    private void Patrol()
-    {
-        // Calculate movement direction
-        float direction = movingRight ? 1f : -1f;
-        
-        // Move the snail
-        rb.linearVelocity = new Vector2(moveSpeed * direction, rb.linearVelocity.y);
+        // Determine direction to player
+        float directionToPlayer = Mathf.Sign(player.position.x - transform.position.x);
+        movingRight = directionToPlayer > 0;
 
         // Update sprite direction
-        spriteRenderer.flipX = !movingRight;
-
-        // Check if we need to turn around
-        if (ShouldTurnAround())
+        if (spriteRenderer != null)
         {
-            movingRight = !movingRight;
+            spriteRenderer.flipX = !movingRight;
+        }
+
+        // Check if player is in attack range
+        float distanceToPlayer = Vector2.Distance(transform.position, player.position);
+        if (distanceToPlayer <= attackRange && canAttack)
+        {
+            Attack();
+        }
+        // Move toward player if not in attack range
+        else if (CanMoveInDirection(movingRight))
+        {
+            float direction = movingRight ? 1f : -1f;
+            rb.linearVelocity = new Vector2(direction * moveSpeed, rb.linearVelocity.y);
+        }
+        else
+        {
+            rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
         }
     }
 
-    private bool ShouldTurnAround()
+    private void Attack()
     {
-        // Check if we've reached patrol distance limit
-        float distanceFromStart = transform.position.x - startPosition.x;
-        if ((movingRight && distanceFromStart > patrolDistance) ||
-            (!movingRight && distanceFromStart < -patrolDistance))
+        if (Time.time >= lastAttackTime + attackCooldown)
         {
-            return true;
+            lastAttackTime = Time.time;
+            StartCoroutine(PerformAttack());
+        }
+    }
+
+    private IEnumerator PerformAttack()
+    {
+        canAttack = false;
+        
+        // Visual feedback for attack
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.color = Color.red;
         }
 
-        // Check for walls or edges
+        // Check if player is still in range and in front of us
+        if (IsPlayerInAttackRange())
+        {
+            // Apply damage and knockback to player
+            PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
+            if (playerHealth != null)
+            {
+                playerHealth.TakeDamage(attackDamage);
+                
+                // Apply knockback
+                Rigidbody2D playerRb = player.GetComponent<Rigidbody2D>();
+                if (playerRb != null)
+                {
+                    Vector2 knockbackDirection = (player.position - transform.position).normalized;
+                    playerRb.linearVelocity = knockbackDirection * attackKnockback;
+                }
+            }
+        }
+
+        yield return new WaitForSeconds(0.2f);
+
+        // Reset visual feedback
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.color = Color.white;
+        }
+
+        canAttack = true;
+    }
+
+    private bool IsPlayerInAttackRange()
+    {
+        if (player == null) return false;
+
+        float distanceToPlayer = Vector2.Distance(transform.position, player.position);
+        if (distanceToPlayer > attackRange) return false;
+
+        // Check if player is in front of us
+        Vector2 directionToPlayer = (player.position - transform.position).normalized;
+        float dotProduct = Vector2.Dot(directionToPlayer, movingRight ? Vector2.right : Vector2.left);
+        return dotProduct > 0.5f; // Player must be mostly in front
+    }
+
+    private bool CanMoveInDirection(bool isRight)
+    {
         Vector2 rayStart = transform.position;
-        Vector2 rayDirection = movingRight ? Vector2.right : Vector2.left;
+        Vector2 rayDirection = isRight ? Vector2.right : Vector2.left;
 
         // Wall check
         RaycastHit2D wallHit = Physics2D.Raycast(rayStart, rayDirection, wallCheckDistance, groundLayer);
         if (wallHit.collider != null)
         {
-            return true;
+            return false;
         }
 
         // Ground check (check if there's ground ahead)
@@ -82,21 +149,10 @@ public class SnailEnemy : MonoBehaviour
         RaycastHit2D groundHit = Physics2D.Raycast(groundRayStart, Vector2.down, groundCheckDistance, groundLayer);
         if (groundHit.collider == null)
         {
-            return true;
+            return false;
         }
 
-        return false;
-    }
-
-    private void CheckForPlayer()
-    {
-        Collider2D playerCollider = Physics2D.OverlapCircle(transform.position, playerDetectionRange, playerLayer);
-        if (playerCollider != null)
-        {
-            // Player detected - you can add behavior here like increasing speed or changing direction
-            Vector2 directionToPlayer = (playerCollider.transform.position - transform.position).normalized;
-            movingRight = directionToPlayer.x > 0;
-        }
+        return true;
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -105,12 +161,6 @@ public class SnailEnemy : MonoBehaviour
         {
             // Handle player collision - you can add damage logic here
             Debug.Log("Player hit by snail!");
-        }
-
-        // Check if we hit a wall or obstacle
-        if (collision.gameObject.CompareTag("Ground") || collision.gameObject.CompareTag("Wall"))
-        {
-            movingRight = !movingRight;
         }
     }
 
@@ -130,7 +180,7 @@ public class SnailEnemy : MonoBehaviour
         }
     }
 
-    private System.Collections.IEnumerator FlashEffect()
+    private IEnumerator FlashEffect()
     {
         Color originalColor = spriteRenderer.color;
         spriteRenderer.color = Color.red;
@@ -146,18 +196,19 @@ public class SnailEnemy : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        // Draw patrol range
+        // Draw ground check
+        Gizmos.color = Color.green;
+        Vector2 groundRayStart = transform.position + (movingRight ? Vector3.right : Vector3.left) * 0.5f;
+        Gizmos.DrawLine(groundRayStart, groundRayStart + Vector2.down * groundCheckDistance);
+
+        // Draw wall check
+        Gizmos.color = Color.red;
+        Vector2 wallRayStart = transform.position;
+        Vector2 wallRayDirection = movingRight ? Vector2.right : Vector2.left;
+        Gizmos.DrawLine(wallRayStart, wallRayStart + wallRayDirection * wallCheckDistance);
+
+        // Draw attack range
         Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, playerDetectionRange);
-        
-        // Draw patrol limits
-        Gizmos.color = Color.blue;
-        if (Application.isPlaying)
-        {
-            Gizmos.DrawLine(
-                new Vector3(startPosition.x - patrolDistance, startPosition.y, 0),
-                new Vector3(startPosition.x + patrolDistance, startPosition.y, 0)
-            );
-        }
+        Gizmos.DrawWireSphere(transform.position, attackRange);
     }
 } 

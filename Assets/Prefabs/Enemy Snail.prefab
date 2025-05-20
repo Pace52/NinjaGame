@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 21226484}
   - component: {fileID: 4447567895472329101}
   - component: {fileID: 4148104700691025061}
+  - component: {fileID: -3277221030064543989}
   m_Layer: 6
   m_Name: Enemy Snail
   m_TagString: Snail
@@ -148,14 +149,36 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveSpeed: 2
-  patrolDistance: 3
-  groundLayer:
-    serializedVersion: 2
-    m_Bits: 0
   groundCheckDistance: 0.2
   wallCheckDistance: 0.2
-  playerDetectionRange: 5
-  playerLayer:
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 64
+  maxHealth: 2
+--- !u!50 &-3277221030064543989
+Rigidbody2D:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 103682}
+  m_BodyType: 0
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_GravityScale: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
-  maxHealth: 2
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 0

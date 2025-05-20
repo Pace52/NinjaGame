@@ -22,27 +22,48 @@ public class ItemBox : MonoBehaviour
         boxCollider = GetComponent<BoxCollider2D>();
         initialPosition = transform.position;
         
+        // Initialize ground layer
+        int groundLayerIndex = LayerMask.NameToLayer("Ground");
+        if (groundLayerIndex == -1)
+        {
+            Debug.LogError("Ground layer not found! Please create a layer named 'Ground' in the Layer settings.");
+        }
+        else
+        {
+            groundLayer = 1 << groundLayerIndex;
+        }
+        
         // Initially disable gravity and make kinematic
         rb.gravityScale = 0;
         rb.isKinematic = true;
-        rb.constraints = RigidbodyConstraints2D.FreezeAll; // Freeze all movement
-    }
+        rb.constraints = RigidbodyConstraints2D.FreezeAll;
 
-    private void OnTriggerEnter2D(Collider2D other)
-    {
-        if (!isFalling && other.CompareTag("Player"))
-        {
-            StartFalling();
-        }
+        // Make sure the collider is not a trigger initially
+        boxCollider.isTrigger = false;
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
+        if (!isFalling && collision.gameObject.CompareTag("Player"))
+        {
+            // Check if player hit from below
+            ContactPoint2D[] contacts = new ContactPoint2D[collision.contactCount];
+            collision.GetContacts(contacts);
+            
+            foreach (ContactPoint2D contact in contacts)
+            {
+                // If the contact point is below the center of the box, player hit from below
+                if (contact.point.y < transform.position.y)
+                {
+                    StartFalling();
+                    break;
+                }
+            }
+        }
         // Check if we hit the ground
-        if (isFalling && ((1 << collision.gameObject.layer) & groundLayer) != 0)
+        else if (isFalling && ((1 << collision.gameObject.layer) & groundLayer) != 0)
         {
             SpawnCoins();
-            // Destroy the box
             Destroy(gameObject);
         }
     }
@@ -51,10 +72,10 @@ public class ItemBox : MonoBehaviour
     {
         isFalling = true;
         rb.isKinematic = false;
-        rb.constraints = RigidbodyConstraints2D.FreezeRotation; // Only allow movement
+        rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         rb.gravityScale = gravityScale;
-        // Add a small initial downward velocity
         rb.linearVelocity = new Vector2(0, -fallSpeed);
+        boxCollider.isTrigger = false;
     }
 
     private void SpawnCoins()

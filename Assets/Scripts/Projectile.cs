@@ -6,6 +6,18 @@ public class Projectile : MonoBehaviour
     [SerializeField] private float lifetime = 2f;
     [SerializeField] private int damage = 1;
 
+    private Vector2 direction = Vector2.right;
+
+    public void SetDirection(Vector2 newDirection)
+    {
+        direction = newDirection;
+        // Flip sprite if moving left
+        if (direction.x < 0)
+        {
+            transform.localScale = new Vector3(-1, 1, 1);
+        }
+    }
+
     private void Start()
     {
         // Destroy projectile after lifetime
@@ -14,8 +26,8 @@ public class Projectile : MonoBehaviour
 
     private void Update()
     {
-        // Move projectile forward
-        transform.Translate(Vector2.right * speed * Time.deltaTime);
+        // Move projectile in its direction
+        transform.Translate(direction * speed * Time.deltaTime);
     }
 
     private void OnTriggerEnter2D(Collider2D other)
