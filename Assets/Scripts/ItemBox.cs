@@ -14,15 +14,18 @@ public class ItemBox : MonoBehaviour
     private bool isFalling = false;
     private Rigidbody2D rb;
     private BoxCollider2D boxCollider;
+    private Vector3 initialPosition;
 
     private void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         boxCollider = GetComponent<BoxCollider2D>();
+        initialPosition = transform.position;
         
         // Initially disable gravity and make kinematic
         rb.gravityScale = 0;
         rb.isKinematic = true;
+        rb.constraints = RigidbodyConstraints2D.FreezeAll; // Freeze all movement
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -48,6 +51,7 @@ public class ItemBox : MonoBehaviour
     {
         isFalling = true;
         rb.isKinematic = false;
+        rb.constraints = RigidbodyConstraints2D.FreezeRotation; // Only allow movement
         rb.gravityScale = gravityScale;
         // Add a small initial downward velocity
         rb.linearVelocity = new Vector2(0, -fallSpeed);

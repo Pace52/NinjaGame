@@ -104,6 +104,13 @@ public class PlayerStateMachine : MonoBehaviour
         levelLoader = FindObjectOfType<LevelLoader>();
         initialPosition = transform.position;
         
+        // Initialize input reader
+        InputReader = GetComponent<InputReader>();
+        if (InputReader == null)
+        {
+            InputReader = gameObject.AddComponent<InputReader>();
+        }
+
         // Setup collider if not assigned
         if (playerCollider == null)
         {
@@ -136,9 +143,6 @@ public class PlayerStateMachine : MonoBehaviour
         {
             wallLayer = groundLayer;
         }
-
-        // Initialize input reader
-        InputReader = new InputReader();
 
         // Initialize states
         InitializeStates();

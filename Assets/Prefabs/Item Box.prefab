@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 21260024}
   - component: {fileID: -3310426732588345742}
   - component: {fileID: 949612680460541049}
+  - component: {fileID: 6214861990543969499}
   m_Layer: 6
   m_Name: Item Box
   m_TagString: Item Box
@@ -162,3 +163,24 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!114 &6214861990543969499
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 173084}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d8b8b364f97042d6b0f1f4359ecf332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  fallSpeed: 5
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  coinPrefab: {fileID: 0}
+  coinsToSpawn: 3
+  coinSpawnForce: 5
+  coinSpreadAngle: 45
+  gravityScale: 1
