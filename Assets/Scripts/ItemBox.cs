@@ -72,9 +72,9 @@ public class ItemBox : MonoBehaviour
     {
         isFalling = true;
         rb.isKinematic = false;
-        rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+        rb.constraints = RigidbodyConstraints2D.FreezeRotation | RigidbodyConstraints2D.FreezePositionX;
         rb.gravityScale = gravityScale;
-        rb.linearVelocity = new Vector2(0, -fallSpeed);
+        rb.linearVelocity = new Vector2(0, -fallSpeed + Random.Range(-0.5f, 0.5f));
         boxCollider.isTrigger = false;
     }
 

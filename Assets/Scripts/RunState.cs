@@ -3,6 +3,7 @@ using UnityEngine;
 public class RunState : PlayerBaseState
 {
     private float enterTime;
+    private bool debug = false;
 
     public RunState(PlayerStateMachine stateMachine) : base(stateMachine)
     {
@@ -24,7 +25,7 @@ public class RunState : PlayerBaseState
         // --- NEW: Check for loss of ground or wall contact ---
         if (!stateMachine.IsGrounded())
         {
-            debug.log("Is not grounded");
+            Debug.Log("Is not grounded");
             if (stateMachine.IsTouchingWall() && stateMachine.RB.linearVelocity.y <= 0)
             {
                 stateMachine.SwitchState(stateMachine.WallClingState);

@@ -2,24 +2,18 @@ using UnityEngine;
 
 public class ShootState : PlayerBaseState
 {
-    // Store reference to the state machine
-    // No factory needed based on PlayerStateMachine.cs structure
-
-    public ShootState(PlayerStateMachine stateMachine) : base(stateMachine) { }
+    public ShootState(PlayerStateMachine stateMachine) : base(stateMachine) {}
 
     public override void Enter()
     {
         // Logic when entering the shoot state (e.g., play animation, aim)
         Debug.Log("Player entered Shoot State");
-        Ctx.Animator.SetBool("IsShooting", true); // Example animation trigger
+        stateMachine.Animator.SetBool("IsShooting", true); // Example animation trigger
     }
 
     public override void Tick(float deltaTime)
     {
         // Logic during the shoot state (e.g., handle firing cooldown, check ammo)
-
-        // Check for transitions out of the shoot state
-        // Check for transitions out of the shoot state
         CheckSwitchStates(); // We'll keep this helper method for clarity
     }
 
@@ -27,7 +21,7 @@ public class ShootState : PlayerBaseState
     {
         // Logic when exiting the shoot state (e.g., stop animation)
         Debug.Log("Player exited Shoot State");
-        Ctx.Animator.SetBool("IsShooting", false); // Example animation reset
+        stateMachine.Animator.SetBool("IsShooting", false); // Example animation reset
     }
 
     // Helper method for transition checks (called from Tick)

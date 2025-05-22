@@ -15,32 +15,45 @@ public class SnailEnemy : MonoBehaviour
     [SerializeField] private float attackCooldown = 1f;
     [SerializeField] private int attackDamage = 1;
     [SerializeField] private float attackKnockback = 5f;
-    private int currentHealth;
+    [SerializeField] private int currentHealth;
     private float lastAttackTime;
     private bool canAttack = true;
+    private float attackCooldownTimer = 0f;
 
     private Rigidbody2D rb;
     private SpriteRenderer spriteRenderer;
     private Transform player;
     private bool movingRight = true;
 
+    private static int snailCounter = 0;
+    private int snailId;
+
+    private void Awake()
+    {
+        snailId = ++snailCounter;
+        Debug.Log($"[Snail {snailId}] Awake. Instance created.");
+    }
+
     private void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         currentHealth = maxHealth;
+        Debug.Log($"[Snail {snailId}] Start. Health: {currentHealth}");
         
         // Find player
         player = GameObject.FindGameObjectWithTag("Player")?.transform;
         if (player == null)
         {
-            Debug.LogError("Player not found! Make sure the player has the 'Player' tag.");
+            Debug.LogError($"[Snail {snailId}] Player not found! Make sure the player has the 'Player' tag.");
         }
     }
 
     private void Update()
     {
+        if (attackCooldownTimer > 0f) attackCooldownTimer -= Time.deltaTime;
         if (player == null) return;
+        //Debug.Log($"[Snail {snailId}] Update. Health: {currentHealth}, Position: {transform.position}, Active: {gameObject.activeSelf}");
 
         // Determine direction to player
         float directionToPlayer = Mathf.Sign(player.position.x - transform.position.x);
@@ -157,25 +170,64 @@ public class SnailEnemy : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
+        Debug.Log("AAAA");
         if (collision.gameObject.CompareTag("Player"))
         {
-            // Handle player collision - you can add damage logic here
-            Debug.Log("Player hit by snail!");
+            Debug.Log("Collided with player collisions");
+            PlayerHealth playerHealth = collision.gameObject.GetComponent<PlayerHealth>();
+            if (playerHealth != null)
+            {
+                Debug.Log($"Snail collided with Player. Health: {currentHealth}");
+                // Determine collision direction
+                ContactPoint2D[] contacts = new ContactPoint2D[collision.contactCount];
+                collision.GetContacts(contacts);
+                foreach (var contact in contacts)
+                {
+                    Vector2 contactNormal = contact.normal;
+                    Debug.Log($"Contact normal: {contactNormal}");
+                    // If the contact normal points up, player landed on snail
+                    if (contactNormal.y > 0.5f)
+                    {
+                        Debug.Log("Player landed on snail. Snail will die.");
+                        Die();
+                        // Optionally bounce the player up
+                        Rigidbody2D playerRb = collision.gameObject.GetComponent<Rigidbody2D>();
+                        if (playerRb != null) playerRb.linearVelocity = new Vector2(playerRb.linearVelocity.x, 8f);
+                        return;
+                    }
+                    // If the contact normal points left/right, check if it's the front
+                    if (attackCooldownTimer <= 0f && ((movingRight && contactNormal.x < -0.5f) || (!movingRight && contactNormal.x > 0.5f)))
+                    {
+                        Debug.Log("Player hit by snail's front. Player will take damage.");
+                        TakeDamage();
+                        attackCooldownTimer = 0.5f;
+                        // Optionally knock back the player
+                        Rigidbody2D playerRb = collision.gameObject.GetComponent<Rigidbody2D>();
+                        if (playerRb != null)
+                        {
+                            Vector2 knockbackDir = (collision.transform.position - transform.position).normalized;
+                            playerRb.linearVelocity = new Vector2(knockbackDir.x * attackKnockback, 4f);
+                        }
+                        return;
+                    }
+                }
+            }
         }
     }
 
     public void TakeDamage()
     {
+        Debug.Log($"[Snail {snailId}] TakeDamage() called. Current health: {currentHealth}");
         currentHealth--;
-        
+        Debug.Log($"[Snail {snailId}] Snail took damage! New health: {currentHealth}");
         // Flash effect
         if (spriteRenderer != null)
         {
             StartCoroutine(FlashEffect());
         }
-
         if (currentHealth <= 0)
         {
+            Debug.Log($"[Snail {snailId}] Health <= 0. Calling Die().");
             Die();
         }
     }
@@ -190,8 +242,15 @@ public class SnailEnemy : MonoBehaviour
 
     private void Die()
     {
+        Debug.Log($"[Snail {snailId}] Die() called. Destroying snail GameObject. Health: {currentHealth}");
         // Add death effects here (particles, sound, etc.)
         Destroy(gameObject);
+        Debug.Log($"[Snail {snailId}] Destroy(gameObject) called. (If you see this log again, object is still alive.)");
+    }
+
+    private void OnDestroy()
+    {
+        Debug.Log($"[Snail {snailId}] OnDestroy called. Snail should now be destroyed.");
     }
 
     private void OnDrawGizmos()

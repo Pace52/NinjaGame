@@ -179,7 +179,7 @@ MonoBehaviour:
   groundLayer:
     serializedVersion: 2
     m_Bits: 0
-  coinPrefab: {fileID: 0}
+  coinPrefab: {fileID: 193220, guid: 4452304ede9b69b4db8ef1d677b45639, type: 3}
   coinsToSpawn: 3
   coinSpawnForce: 5
   coinSpreadAngle: 45

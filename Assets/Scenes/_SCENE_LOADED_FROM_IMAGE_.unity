@@ -188,7 +188,7 @@ MonoBehaviour:
     prefab: {fileID: 103682, guid: 3e707ed2970f72f4fa722591811337ed, type: 3}
   - color:
       serializedVersion: 2
-      rgba: 0
+      rgba: 16777215
     prefab: {fileID: 0}
   - color:
       serializedVersion: 2
@@ -367,6 +367,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Player: {fileID: 0}
+  smoothSpeed: 0.125
+  positionOffset: {x: 0, y: 1, z: -10}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
