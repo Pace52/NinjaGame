@@ -119,6 +119,10 @@ public class SnailEnemy : MonoBehaviour
                     playerRb.linearVelocity = knockbackDirection * attackKnockback;
                 }
             }
+            else
+            {
+                Debug.LogWarning($"[Snail {snailId}] PlayerHealth component not found on collided object or its parent/children: {collision.gameObject.name}");
+            }
         }
 
         yield return new WaitForSeconds(0.2f);
@@ -175,6 +179,10 @@ public class SnailEnemy : MonoBehaviour
         {
             Debug.Log("Collided with player collisions");
             PlayerHealth playerHealth = collision.gameObject.GetComponent<PlayerHealth>();
+            if (playerHealth == null)
+                playerHealth = collision.gameObject.GetComponentInParent<PlayerHealth>();
+            if (playerHealth == null)
+                playerHealth = collision.gameObject.GetComponentInChildren<PlayerHealth>();
             if (playerHealth != null)
             {
                 Debug.Log($"Snail collided with Player. Health: {currentHealth}");
@@ -188,18 +196,19 @@ public class SnailEnemy : MonoBehaviour
                     // If the contact normal points up, player landed on snail
                     if (contactNormal.y > 0.5f)
                     {
-                        Debug.Log("Player landed on snail. Snail will die.");
-                        Die();
+                        Debug.Log($"[Snail {snailId}] Player landed on snail. Calling TakeDamage().");
+                        TakeDamage();
                         // Optionally bounce the player up
                         Rigidbody2D playerRb = collision.gameObject.GetComponent<Rigidbody2D>();
                         if (playerRb != null) playerRb.linearVelocity = new Vector2(playerRb.linearVelocity.x, 8f);
+                        Debug.Log($"[Snail {snailId}] After TakeDamage. Health: {currentHealth}");
                         return;
                     }
                     // If the contact normal points left/right, check if it's the front
                     if (attackCooldownTimer <= 0f && ((movingRight && contactNormal.x < -0.5f) || (!movingRight && contactNormal.x > 0.5f)))
                     {
                         Debug.Log("Player hit by snail's front. Player will take damage.");
-                        TakeDamage();
+                        playerHealth.TakeDamage(1);
                         attackCooldownTimer = 0.5f;
                         // Optionally knock back the player
                         Rigidbody2D playerRb = collision.gameObject.GetComponent<Rigidbody2D>();
@@ -211,6 +220,10 @@ public class SnailEnemy : MonoBehaviour
                         return;
                     }
                 }
+            }
+            else
+            {
+                Debug.LogWarning($"[Snail {snailId}] PlayerHealth component not found on collided object or its parent/children: {collision.gameObject.name}");
             }
         }
     }
