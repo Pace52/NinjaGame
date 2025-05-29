@@ -110,7 +110,6 @@ public class SnailEnemy : MonoBehaviour
             if (playerHealth != null)
             {
                 playerHealth.TakeDamage(attackDamage);
-                
                 // Apply knockback
                 Rigidbody2D playerRb = player.GetComponent<Rigidbody2D>();
                 if (playerRb != null)
@@ -121,7 +120,7 @@ public class SnailEnemy : MonoBehaviour
             }
             else
             {
-                Debug.LogWarning($"[Snail {snailId}] PlayerHealth component not found on collided object or its parent/children: {collision.gameObject.name}");
+                Debug.LogWarning($"[Snail {snailId}] PlayerHealth component not found on player object: {player?.name}");
             }
         }
 
@@ -283,4 +282,4 @@ public class SnailEnemy : MonoBehaviour
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, attackRange);
     }
-} 
+}
