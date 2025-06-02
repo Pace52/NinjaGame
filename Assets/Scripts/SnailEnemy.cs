@@ -174,14 +174,27 @@ public class SnailEnemy : MonoBehaviour
     private void OnCollisionEnter2D(Collision2D collision)
     {
         Debug.Log("AAAA");
-        if (collision.gameObject.CompareTag("Player"))
+        // Robustly check if the collided object or any of its parents is tagged 'Player'
+        Transform t = collision.transform;
+        bool foundPlayerTag = false;
+        while (t != null)
+        {
+            if (t.CompareTag("Player"))
+            {
+                foundPlayerTag = true;
+                break;
+            }
+            t = t.parent;
+        }
+        if (foundPlayerTag)
         {
             Debug.Log("Collided with player collisions");
-            PlayerHealth playerHealth = collision.gameObject.GetComponent<PlayerHealth>();
+            GameObject playerObj = t != null ? t.gameObject : collision.gameObject;
+            PlayerHealth playerHealth = playerObj.GetComponent<PlayerHealth>();
             if (playerHealth == null)
-                playerHealth = collision.gameObject.GetComponentInParent<PlayerHealth>();
+                playerHealth = playerObj.GetComponentInParent<PlayerHealth>();
             if (playerHealth == null)
-                playerHealth = collision.gameObject.GetComponentInChildren<PlayerHealth>();
+                playerHealth = playerObj.GetComponentInChildren<PlayerHealth>();
             if (playerHealth != null)
             {
                 Debug.Log($"Snail collided with Player. Health: {currentHealth}");
@@ -198,7 +211,7 @@ public class SnailEnemy : MonoBehaviour
                         Debug.Log($"[Snail {snailId}] Player landed on snail. Calling TakeDamage().");
                         TakeDamage();
                         // Optionally bounce the player up
-                        Rigidbody2D playerRb = collision.gameObject.GetComponent<Rigidbody2D>();
+                        Rigidbody2D playerRb = playerObj.GetComponent<Rigidbody2D>();
                         if (playerRb != null) playerRb.linearVelocity = new Vector2(playerRb.linearVelocity.x, 8f);
                         Debug.Log($"[Snail {snailId}] After TakeDamage. Health: {currentHealth}");
                         return;
@@ -210,7 +223,7 @@ public class SnailEnemy : MonoBehaviour
                         playerHealth.TakeDamage(1);
                         attackCooldownTimer = 0.5f;
                         // Optionally knock back the player
-                        Rigidbody2D playerRb = collision.gameObject.GetComponent<Rigidbody2D>();
+                        Rigidbody2D playerRb = playerObj.GetComponent<Rigidbody2D>();
                         if (playerRb != null)
                         {
                             Vector2 knockbackDir = (collision.transform.position - transform.position).normalized;
@@ -222,12 +235,12 @@ public class SnailEnemy : MonoBehaviour
             }
             else
             {
-                Debug.LogWarning($"[Snail {snailId}] PlayerHealth component not found on collided object or its parent/children: {collision.gameObject.name}");
+                Debug.LogWarning($"[Snail {snailId}] PlayerHealth component not found on collided object or its parent/children: {playerObj.name}");
             }
         }
     }
 
-    public void TakeDamage()
+    public int TakeDamage()
     {
         Debug.Log($"[Snail {snailId}] TakeDamage() called. Current health: {currentHealth}");
         currentHealth--;
@@ -242,6 +255,7 @@ public class SnailEnemy : MonoBehaviour
             Debug.Log($"[Snail {snailId}] Health <= 0. Calling Die().");
             Die();
         }
+        return currentHealth;
     }
 
     private IEnumerator FlashEffect()
