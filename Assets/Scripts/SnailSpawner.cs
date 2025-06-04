@@ -15,16 +15,7 @@ public class SnailSpawner : MonoBehaviour
         nextSpawnTime = Time.time + spawnInterval;
     }
 
-    private void Update()
-    {
-        if (Time.time >= nextSpawnTime)
-        {
-            SpawnSnail();
-            nextSpawnTime = Time.time + spawnInterval;
-        }
-    }
-
-    private void SpawnSnail()
+    public void SpawnSnail()
     {
         // Calculate random position within radius
         Vector2 randomCircle = Random.insideUnitCircle * spawnRadius;

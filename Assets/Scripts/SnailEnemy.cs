@@ -205,30 +205,19 @@ public class SnailEnemy : MonoBehaviour
                 {
                     Vector2 contactNormal = contact.normal;
                     Debug.Log($"Contact normal: {contactNormal}");
-                    // If the contact normal points up, player landed on snail
-                    if (contactNormal.y > 0.5f)
+                    float playerY = playerObj.transform.position.y;
+                    float snailY = transform.position.y;
+
+                    if ((playerY > snailY && contactNormal.y > 0.0f) || // Player lands on top
+                        (playerY < snailY && contactNormal.y < -0.0f)) // Player hits from below
                     {
-                        Debug.Log($"[Snail {snailId}] Player landed on snail. Calling TakeDamage().");
+                        Debug.Log($"[Snail {snailId}] Player hit snail from above or below. Calling TakeDamage().");
                         TakeDamage();
-                        // Optionally bounce the player up
+                        // Optionally bounce the player up if from above
                         Rigidbody2D playerRb = playerObj.GetComponent<Rigidbody2D>();
-                        if (playerRb != null) playerRb.linearVelocity = new Vector2(playerRb.linearVelocity.x, 8f);
+                        if (playerRb != null && playerY > snailY)
+                            playerRb.linearVelocity = new Vector2(playerRb.linearVelocity.x, 8f);
                         Debug.Log($"[Snail {snailId}] After TakeDamage. Health: {currentHealth}");
-                        return;
-                    }
-                    // If the contact normal points left/right, check if it's the front
-                    if (attackCooldownTimer <= 0f && ((movingRight && contactNormal.x < -0.5f) || (!movingRight && contactNormal.x > 0.5f)))
-                    {
-                        Debug.Log("Player hit by snail's front. Player will take damage.");
-                        playerHealth.TakeDamage(1);
-                        attackCooldownTimer = 0.5f;
-                        // Optionally knock back the player
-                        Rigidbody2D playerRb = playerObj.GetComponent<Rigidbody2D>();
-                        if (playerRb != null)
-                        {
-                            Vector2 knockbackDir = (collision.transform.position - transform.position).normalized;
-                            playerRb.linearVelocity = new Vector2(knockbackDir.x * attackKnockback, 4f);
-                        }
                         return;
                     }
                 }
