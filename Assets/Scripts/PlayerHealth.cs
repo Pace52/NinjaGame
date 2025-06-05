@@ -1,18 +1,33 @@
 using UnityEngine;
+using System.Collections;
 
 public class PlayerHealth : MonoBehaviour
 {
     public int health = 3;
+    public static System.Action<int> OnHealthChanged;
 
     public void TakeDamage(int amount)
     {
         health -= amount;
         Debug.Log($"Player took damage! Health: {health}");
+        // Flash red when taking damage
+        var sr = GetComponent<SpriteRenderer>();
+        if (sr != null)
+            StartCoroutine(FlashRed(sr));
+        OnHealthChanged?.Invoke(health);
         if (health <= 0)
         {
             Debug.Log("Player health <= 0. Calling Die().");
             Die();
         }
+    }
+
+    private System.Collections.IEnumerator FlashRed(SpriteRenderer sr)
+    {
+        Color original = sr.color;
+        sr.color = Color.red;
+        yield return new WaitForSeconds(0.1f);
+        sr.color = original;
     }
 
     private void Die()

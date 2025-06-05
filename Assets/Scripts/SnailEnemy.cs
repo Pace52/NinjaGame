@@ -20,6 +20,10 @@ public class SnailEnemy : MonoBehaviour
     private bool canAttack = true;
     private float attackCooldownTimer = 0f;
 
+    [Header("Rewards")]
+    [SerializeField] private GameObject coinPrefab;
+    public static int DeadSnailCount = 0;
+
     private Rigidbody2D rb;
     private SpriteRenderer spriteRenderer;
     private Transform player;
@@ -259,6 +263,12 @@ public class SnailEnemy : MonoBehaviour
     {
         Debug.Log($"[Snail {snailId}] Die() called. Destroying snail GameObject. Health: {currentHealth}");
         // Add death effects here (particles, sound, etc.)
+        // Spawn a coin at the snail's position
+        if (coinPrefab != null)
+        {
+            Instantiate(coinPrefab, transform.position, Quaternion.identity);
+        }
+        DeadSnailCount++;
         Destroy(gameObject);
         Debug.Log($"[Snail {snailId}] Destroy(gameObject) called. (If you see this log again, object is still alive.)");
     }
@@ -285,4 +295,7 @@ public class SnailEnemy : MonoBehaviour
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, attackRange);
     }
+
+    // Allows setting the coin prefab from a manager or spawner
+    public void SetCoinPrefab(GameObject prefab) { coinPrefab = prefab; }
 }

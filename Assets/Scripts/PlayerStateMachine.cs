@@ -19,7 +19,7 @@ public abstract class PlayerBaseState
 // The main state machine component
 public class PlayerStateMachine : MonoBehaviour
 {
-    public int coinCount = 0;
+    public static int coinCount = 0;
     private bool wasGroundedLastFrame = true;
     private bool isDead = false;
     private Vector3 initialPosition;
@@ -95,6 +95,8 @@ public class PlayerStateMachine : MonoBehaviour
 
     // InputReader abstraction (now a separate class)
     public InputReader InputReader { get; private set; } // Public property for states to access
+
+    public static System.Action<int> OnCoinCountChanged;
 
     private void Awake()
     {
@@ -389,6 +391,7 @@ public class PlayerStateMachine : MonoBehaviour
 
             // Increment the coin count by one
             coinCount++;
+            OnCoinCountChanged?.Invoke(coinCount);
 
             // Optionally, print the new coin count for debugging
             Debug.Log("Coins collected: " + coinCount);

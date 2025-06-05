@@ -155,6 +155,12 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 64
   maxHealth: 2
+  attackRange: 1
+  attackCooldown: 1
+  attackDamage: 1
+  attackKnockback: 5
+  currentHealth: 0
+  coinPrefab: {fileID: 193220, guid: 4452304ede9b69b4db8ef1d677b45639, type: 3}
 --- !u!50 &-3277221030064543989
 Rigidbody2D:
   serializedVersion: 5
