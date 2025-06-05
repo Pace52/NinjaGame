@@ -17,9 +17,17 @@ public class PlayerHealth : MonoBehaviour
 
     private void Die()
     {
-        Debug.Log("Player Die() called. Destroying player GameObject.");
-        // Add player death logic here (e.g., play animation, disable controls, respawn, etc.)
-        Destroy(gameObject);
-        Debug.Log("Player GameObject should now be destroyed.");
+        Debug.Log("Player Die() called. Resetting scene.");
+        // Try to use PlayerStateMachine's Die if available
+        var stateMachine = GetComponent<PlayerStateMachine>();
+        if (stateMachine != null)
+        {
+            stateMachine.SendMessage("Die");
+        }
+        else
+        {
+            // Fallback: reload the current scene
+            UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
+        }
     }
 } 
