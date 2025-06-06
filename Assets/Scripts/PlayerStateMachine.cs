@@ -416,7 +416,7 @@ public class PlayerStateMachine : MonoBehaviour
         }
 
         // Reset level after a short delay
-        Invoke("ResetLevel", 1.5f);
+        ResetLevel();
     }
 
     private void ResetLevel()

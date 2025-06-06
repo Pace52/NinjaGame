@@ -1,6 +1,8 @@
 using UnityEngine;
 using System.Collections;
 
+//private int DeadSnailCount;
+//private int coins;
 public class PlayerHealth : MonoBehaviour
 {
     public int health = 3;
@@ -19,6 +21,9 @@ public class PlayerHealth : MonoBehaviour
         {
             Debug.Log("Player health <= 0. Calling Die().");
             Die();
+            health = 3;
+            //coins = 0;
+            //DeadSnailCount = 0;
         }
     }
 
