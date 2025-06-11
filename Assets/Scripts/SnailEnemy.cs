@@ -31,7 +31,7 @@ public class SnailEnemy : MonoBehaviour
 
     private static int snailCounter = 0;
     private int snailId;
-
+    //public GameObject Item Box;
     private void Awake()
     {
         snailId = ++snailCounter;
@@ -85,6 +85,11 @@ public class SnailEnemy : MonoBehaviour
         {
             rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
         }
+
+        if (transform.position.y < -20)
+        {
+            FalltoDeath();
+        }
     }
 
     private void Attack()
@@ -133,8 +138,8 @@ public class SnailEnemy : MonoBehaviour
         // Reset visual feedback
         if (spriteRenderer != null)
         {
-            spriteRenderer.color = Color.white;
-        }
+           spriteRenderer.color = Color.white;
+         }
 
         canAttack = true;
     }
@@ -177,6 +182,10 @@ public class SnailEnemy : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
+        if (collision.gameObject.CompareTag("Item Box"))
+        {
+            ItemCrush();
+        }
         Debug.Log("AAAA");
         // Robustly check if the collided object or any of its parents is tagged 'Player'
         Transform t = collision.transform;
@@ -250,7 +259,14 @@ public class SnailEnemy : MonoBehaviour
         }
         return currentHealth;
     }
-
+    public void FalltoDeath()
+    {
+        Die();
+    }
+    public void ItemCrush()
+    {
+        Die();
+    }   
     private IEnumerator FlashEffect()
     {
         Color originalColor = spriteRenderer.color;

@@ -3,6 +3,7 @@ using System.Collections;
 
 public class PlayerHealth : MonoBehaviour
 {
+    private bool isDead = false;
     private int DeadSnailCount;
     private int coins;
     public int health = 3;
@@ -42,7 +43,7 @@ public class PlayerHealth : MonoBehaviour
         var stateMachine = GetComponent<PlayerStateMachine>();
         if (stateMachine != null)
         {
-            stateMachine.SendMessage("Die");
+            stateMachine.ResetLevel();
         }
         else
         {
@@ -50,4 +51,26 @@ public class PlayerHealth : MonoBehaviour
             UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
         }
     }
+
+    /*private void ResetLevel()
+    {
+    // Reset player state
+        isDead = false;
+        if (RB != null)
+        {
+            RB.isKinematic = false;
+        }
+
+        // Reset player position
+        transform.position = initialPosition;
+
+        // Reset level if level loader exists
+        if (levelLoader != null)
+        {
+            levelLoader.LoadMap();
+        }
+
+        // Reset to idle state
+        SwitchState(IdleState);
+    }*/
 } 

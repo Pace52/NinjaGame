@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using TMPro;
 
 // Base class for all player states
 public abstract class PlayerBaseState
@@ -24,6 +25,12 @@ public class PlayerStateMachine : MonoBehaviour
     private bool isDead = false;
     private Vector3 initialPosition;
     private LevelLoader levelLoader;
+    public int health = 3;
+    public int coins = 0;
+    public int DeadSnailCount = 0;
+    public TMP_Text healthText;
+    public TMP_Text coinText;
+    public TMP_Text snailText;
 
     // --- Coyote time (grounded grace period) ---
     //private CapsuleCollider2D playerCollider;
@@ -187,6 +194,9 @@ public class PlayerStateMachine : MonoBehaviour
         // Set the initial state
         SwitchState(IdleState); // Start in Idle state
         JumpsRemaining = MaxJumps;
+        healthText = GameObject.Find("healthText").GetComponent<TMP_Text>();
+        coinText = GameObject.Find("coinText").GetComponent<TMP_Text>();
+        snailText = GameObject.Find("snailText").GetComponent<TMP_Text>();
     }
     public CapsuleCollider2D GetPlayerCollider()
     {
@@ -414,12 +424,11 @@ public class PlayerStateMachine : MonoBehaviour
         {
             Animator.SetTrigger("Die");
         }
-
-        // Reset level after a short delay
+        //// Reset level after a short delay
         ResetLevel();
     }
 
-    private void ResetLevel()
+    public void ResetLevel()
     {
         // Reset player state
         isDead = false;
@@ -430,7 +439,12 @@ public class PlayerStateMachine : MonoBehaviour
 
         // Reset player position
         transform.position = initialPosition;
-
+        health = 3;
+        coins = 0;
+        DeadSnailCount = 0;
+        healthText.text = "3";
+        coinText.text = "0";
+        snailText.text = "0";
         // Reset level if level loader exists
         if (levelLoader != null)
         {
