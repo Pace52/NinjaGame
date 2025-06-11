@@ -442,9 +442,9 @@ public class PlayerStateMachine : MonoBehaviour
         health = 3;
         coins = 0;
         DeadSnailCount = 0;
-        healthText.text = "3";
-        coinText.text = "0";
-        snailText.text = "0";
+        healthText.text = "Health: 3";
+        coinText.text = "Coins: 0";
+        snailText.text = "Dead Snails: 0";
         // Reset level if level loader exists
         if (levelLoader != null)
         {
